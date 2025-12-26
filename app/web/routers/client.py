@@ -1,4 +1,4 @@
-# app/web/routers/client.py - Public client routes
+# app/web/routers/client.py - UPDATED with landing content
 """
 Public routes for client booking interface.
 No authentication required.
@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from datetime import datetime
 from typing import Optional
+from pathlib import Path
 
 from app.models import Slot, SlotStatus, Request as BookingRequest, RequestType, RequestStatus, User
 from app.utils_slots import (
@@ -27,6 +28,67 @@ templates = Jinja2Templates(directory="app/web/templates")
 # ============================================================================
 # PAGE ROUTES
 # ============================================================================
+
+@router.get("/", response_class=HTMLResponse)
+async def client_index(request: Request, lang: str = "ru"):
+    """
+    Client landing page with content from uploaded landings.
+    Displays work terms, qualification, about psychotherapy, and references.
+    """
+    landings_dir = Path("/app/landings")
+    landing_content = {}
+    
+    # Define topics to display
+    topics = {
+        "work_terms": {
+            "ru": "Условия работы",
+            "am": "Աշխատանքի պայմաններ",
+            "en": "Work Terms"
+        },
+        "qualification": {
+            "ru": "Квалификация",
+            "am": "Որակավորում",
+            "en": "Qualification"
+        },
+        "about_psychotherapy": {
+            "ru": "О психотерапии",
+            "am": "Հոգեթերապիայի մասին",
+            "en": "About Psychotherapy"
+        },
+        "references": {
+            "ru": "Рекомендации",
+            "am": "Հղումներ",
+            "en": "References"
+        }
+    }
+    
+    # Load landing content for selected language
+    for topic_key in topics.keys():
+        file_path = landings_dir / f"{topic_key}_{lang}.html"
+        if file_path.exists():
+            try:
+                content = file_path.read_text(encoding='utf-8')
+                landing_content[topic_key] = {
+                    "title": topics[topic_key].get(lang, topic_key),
+                    "content": content
+                }
+            except Exception as e:
+                print(f"Error reading landing {topic_key}_{lang}: {e}")
+    
+    return templates.TemplateResponse(
+        "client/index.html",
+        {
+            "request": request,
+            "lang": lang,
+            "landings": landing_content,
+            "languages": {
+                "ru": "Русский",
+                "am": "Հայերեն"
+            },
+            "has_content": len(landing_content) > 0
+        }
+    )
+
 
 @router.get("/book", response_class=HTMLResponse)
 async def booking_page(request: Request, lang: str = "ru"):
