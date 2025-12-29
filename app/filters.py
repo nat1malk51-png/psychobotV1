@@ -114,7 +114,20 @@ admin_button_hardcoded = filters.Regex(
 # COMBINED FILTERS
 # ============================================================================
 
-# All menu buttons (for exclusion from generic handlers)
+# Landing page buttons (should trigger handle_menu_click)
+landing_buttons = (
+    terms_button | 
+    qualification_button | 
+    about_button
+)
+
+# Buttons that have dedicated handlers (exclude from generic handler)
+excluded_from_generic = (
+    booking_button |  # Has ConversationHandler
+    home_button       # Has dedicated handler
+)
+
+# All menu buttons (for reference)
 all_menu_buttons = (
     booking_button | 
     terms_button | 
