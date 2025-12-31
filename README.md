@@ -92,6 +92,142 @@ This project was born from a real need and built collaboratively with the help o
 * **Claude (Anthropic):** Gap analysis, feature implementation, and critical UX fixes for v0.8, most works on UI and backend code for update to v1.0.X.
 
 Pull requests are welcome!
+
+Here is the expanded, beginner-friendly version of the "Home Hosting" guide.
+
+I have broken it down into very specific actions (like "Look for the whale icon" or "Open Notepad") to remove any ambiguity for someone who has never used a terminal before.
+
+You can add this to your README.md or as a separate guide.
+🏠 Home Hosting Guide: Run on Your Laptop/Desktop
+
+Who is this for? Therapists who want to own their data and run the bot from their own computer (Windows or Mac) without paying for a cloud server or needing complex IT skills.
+
+Requirements:
+
+    A computer that stays ON and connected to the internet during the hours you want clients to book.
+
+    A free Cloudflare account.
+
+    A domain name (e.g., doctor-name.com).
+
+Phase 1: Install the Software
+
+    Download Docker Desktop:
+
+        Go to docker.com/products/docker-desktop and download the version for your computer (Windows or Mac).
+
+        Install it just like any other program.
+
+        Crucial Step: Once installed, open the "Docker Desktop" application. You should see a little whale icon in your taskbar (near the clock). Docker must be running for your bot to work.
+
+    Download the Bot Code:
+
+        Click the green Code button on this GitHub page and select Download ZIP.
+
+        Extract (unzip) the folder to somewhere easy to find, like your Desktop or Documents. Rename the folder to psychobot.
+
+Phase 2: Connect Your Domain (Cloudflare)
+
+This step creates a secure "tunnel" so the internet can talk to your computer without you needing to mess with router settings.
+
+    Create a Tunnel:
+
+        Log in to the Cloudflare Zero Trust Dashboard.
+
+        On the left menu, click Networks → Tunnels.
+
+        Click the blue Create a Tunnel button.
+
+        Select Cloudflared (connector type) and click Next.
+
+        Name your tunnel (e.g., my-bot) and click Save Tunnel.
+
+    Get the Secret Token:
+
+        You will see a screen with installation commands for different operating systems.
+
+        Look for the box with the code. You don't need the whole command, just the long string of random letters and numbers following the word token:.
+
+        Copy that long string and save it somewhere safe for a moment.
+
+    Point the Tunnel to Your Bot:
+
+        Click Next at the bottom of the Cloudflare page.
+
+        Public Hostname:
+
+            Subdomain: Leave blank (or type www).
+
+            Domain: Select your domain (e.g., doctor-name.com).
+
+        Service:
+
+            Type: Select HTTP.
+
+            URL: Type web:8000.
+
+        Click Save Tunnel.
+
+Phase 3: Configure the Bot
+
+    Open the Config File:
+
+        Go to the psychobot folder you unzipped earlier.
+
+        Look for a file named .env.
+
+            Note: If you don't see it, look for .env.example, make a copy of it, and rename the copy to .env.
+
+        Right-click the .env file and choose Open with → Notepad (Windows) or TextEdit (Mac).
+
+    Update the Settings:
+
+        Find the line that says COMPOSE_PROFILES=npm. Change it to:
+        Ini, TOML
+
+COMPOSE_PROFILES=cloudflare
+
+Find the line TUNNEL_TOKEN=. Paste the long code you copied from Cloudflare:
+Ini, TOML
+
+        TUNNEL_TOKEN=eyJhIjoi... (paste your long token here)
+
+        Make sure your BOT_TOKEN (from Telegram) and ADMIN_IDS are also filled in.
+
+        Save the file and close it.
+
+Phase 4: Start the Bot
+
+    Open the Terminal:
+
+        Windows: Open the psychobot folder. In the address bar at the top (where it says C:\Users\...), click, type cmd, and hit Enter. A black window should appear.
+
+        Mac: Open "Terminal". Type cd (with a space), drag the psychobot folder into the window, and hit Enter.
+
+    Run the Start Command: Type this exact command and press Enter:
+    Bash
+
+    docker compose up -d
+
+    Wait:
+
+        You will see lines of text saying "Pulling..." and "Downloading...". This is normal; it's downloading the necessary software.
+
+        Once it says "Started" or "Healthy", you are done!
+
+🎉 Your bot is now live! Try sending /start to your bot in Telegram.
+❓ Common Questions
+
+How do I stop it? Open the terminal in the folder again and run: docker compose down.
+
+What if I restart my computer?
+
+    Make sure Docker Desktop starts (look for the whale icon).
+
+    Open the terminal in the folder and run docker compose up -d again.
+
+Do I need to keep the black window open? No. Once the command finishes, you can close the terminal window. The bot runs quietly in the background (inside Docker).
+
 (foloowing description right now copy-pasted from v0.8)
 ## Features
 
