@@ -40,7 +40,7 @@ A hybrid booking management system for psychotherapists combining a Telegram Bot
 
 1.  **Clone the repository:**
     ```bash
-    git clone [https://github.com/abriesk/psychobot.git](https://github.com/abriesk/psychobotV1.git)
+    git clone https://github.com/abriesk/psychobotV1.git
     cd psychobot
     ```
 
@@ -93,11 +93,6 @@ This project was born from a real need and built collaboratively with the help o
 
 Pull requests are welcome!
 
-Here is the expanded, beginner-friendly version of the "Home Hosting" guide.
-
-I have broken it down into very specific actions (like "Look for the whale icon" or "Open Notepad") to remove any ambiguity for someone who has never used a terminal before.
-
-You can add this to your README.md or as a separate guide.
 🏠 Home Hosting Guide: Run on Your Laptop/Desktop
 
 Who is this for? Therapists who want to own their data and run the bot from their own computer (Windows or Mac) without paying for a cloud server or needing complex IT skills.
