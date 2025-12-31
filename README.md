@@ -1,7 +1,97 @@
 # Psychotherapy Booking Bot V1.0 (In work curently)
 
 Telegram bot for psychotherapists to manage client bookings: online/onsite, individual/couple sessions, time negotiation, waitlist, and admin tools. Now with webUI for clients and admin. NPM to register your domain and request certificate. Added ability to add aditional languages from web admin UI.
+# Psychotherapy Booking Bot v1.0.X
 
+A hybrid booking management system for psychotherapists combining a Telegram Bot interface with a modern Web UI. Designed to handle scheduling, client negotiations, content management, and multi-language support efficiently.
+
+## 🚀 New in v1.0.X
+* **Web Admin Dashboard:** Full graphical interface to manage bookings, content, and settings.
+* **Web Client Booking:** Clients can now book slots directly via a web interface in addition to the Telegram bot.
+* **Dynamic Content:** Add languages and edit translations directly from the database without code changes.
+* **Flexible Infrastructure:** Native Docker support for both Nginx Proxy Manager and Cloudflare Tunnel.
+
+## Features
+
+### 🤖 For Clients
+* **Dual Interface:** Book via Telegram chat flow or a clean Web UI.
+* **Smart Booking:** View available slots, request specific times, or join a waitlist.
+* **Multi-Language:** Interface available in Russian, Armenian, and easily extensible to others via the Admin Panel.
+* **Info Hub:** Access HTML landing pages (Terms, Qualifications, About) directly within the bot.
+
+### 🛠 For Therapists (Admin)
+* **Web Dashboard:**
+    * **Slot Management:** Create, hold, and release appointment slots visually.
+    * **Request Handling:** Approve, reject, or propose alternative times for booking requests.
+    * **Content Management:** Edit "Landing" pages (HTML) and system translations on the fly.
+    * **Settings:** Configure timezones, prices, and languages.
+* **Telegram Admin Tools:** Quick toggles for availability, immediate request notifications, and basic management commands.
+* **Negotiation History:** Full log of proposals and counter-proposals stored in PostgreSQL.
+
+### ⚙️ Technical Highlights
+* **Backend:** Python 3.10+ (Aiogram 3.x + FastAPI).
+* **Database:** PostgreSQL 15 with SQLAlchemy & Alembic migrations.
+* **Deployment:** Docker Compose with **Profiles** for easy proxy switching.
+* **Security:** Environment-based configuration, hidden internal ports.
+
+---
+
+## Quick Start (Docker)
+
+1.  **Clone the repository:**
+    ```bash
+    git clone [https://github.com/abriesk/psychobot.git](https://github.com/abriesk/psychobotV1.git)
+    cd psychobot
+    ```
+
+2.  **Configure Environment:**
+    Create a `.env` file (see provided example) with your credentials:
+    ```env
+    BOT_TOKEN=your_token
+    ADMIN_IDS=123456789
+    POSTGRES_USER=postgres
+    POSTGRES_PASSWORD=secret
+    
+    # Choose your proxy profile: 'npm' or 'cloudflare'
+    COMPOSE_PROFILES=npm
+    # TUNNEL_TOKEN=ey... (Required if using cloudflare)
+    ```
+
+3.  **Run with Docker:**
+    The system uses Docker profiles to launch the appropriate proxy service.
+    ```bash
+    docker compose up --build -d
+    ```
+
+4.  **Access:**
+    * **Telegram:** Start your bot via the Telegram app.
+    * **Web Admin:** Access via `https://your-domain.com/admin` (configured via NPM or Cloudflare).
+
+---
+
+## Configuration & Customization
+
+* **Proxy Switching:**
+    Change the `COMPOSE_PROFILES` variable in `.env` to switch between Nginx Proxy Manager (`npm`) and Cloudflare Tunnel (`cloudflare`). No manual container manipulation required.
+    
+* **Adding Languages:**
+    Go to the Web Admin Panel → **Languages** → Add New. The system automatically handles database migration for new translation keys.
+
+* **Landing Pages:**
+    Upload HTML files via the Web Admin Panel or the Telegram `/admin` menu.
+
+---
+
+## Credits & Contribution
+
+This project was born from a real need and built collaboratively with the help of several LLMs under human direction.
+
+* **Concept & Core Strategy:** Ab (Горилла in Chief 🦍)
+* **Grok (xAI):** Technical requirements compilation.
+* **Gemini (Google):** Generated the initial MVP architectural foundation for v0.8, core Python handlers, and performed final system-wide code reviews for version 0.8, bug fixes for v1.0, and cloudflared update.
+* **Claude (Anthropic):** Gap analysis, feature implementation, and critical UX fixes for v0.8, most works on UI and backend code for update to v1.0.X.
+
+Pull requests are welcome!
 (foloowing description right now copy-pasted from v0.8)
 ## Features
 
