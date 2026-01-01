@@ -29,6 +29,12 @@ app.include_router(admin.router, prefix="/admin")
 
 templates = Jinja2Templates(directory="app/web/templates")
 
+#Health Check
+@app.get("/health")
+async def health_check():
+    """Health check for monitoring"""
+    return {"status": "healthy", "service": "psychobot-web"}
+
 # Root redirect / Home Page
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request, lang: str = "ru"):
