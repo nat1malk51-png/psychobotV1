@@ -6,6 +6,7 @@ from app.db import init_db
 from app.handlers import common, consultation, admin, user_negotiation
 from app.translations import load_translations_cache
 from app.scheduler import start_scheduler, stop_scheduler
+from app.handlers.admin import slot_approve_callback, slot_reject_callback
 
 # Import dynamic custom filters
 import app.filters as custom_filters
@@ -284,6 +285,9 @@ def main():
     app.add_handler(MessageHandler(tg_filters.Regex("^Toggle Availability$"), admin.toggle_availability))
     app.add_handler(MessageHandler(tg_filters.Regex("^Pending Requests$"), admin.list_pending))
     app.add_handler(MessageHandler(tg_filters.Regex("^View Slots$"), admin.view_slots))
+    
+    app.add_handler(CallbackQueryHandler(slot_approve_callback, pattern="^slot_approve_"))
+    app.add_handler(CallbackQueryHandler(slot_reject_callback, pattern="^slot_reject_"))
     
     # Admin callbacks
     app.add_handler(CallbackQueryHandler(admin.admin_callback, pattern="^adm_(view|approve|reject)_"))

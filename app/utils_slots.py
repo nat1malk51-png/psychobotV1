@@ -233,20 +233,19 @@ async def release_hold(session: AsyncSession, slot_id: int) -> bool:
 async def confirm_slot_booking(
     session: AsyncSession,
     slot_id: int,
-    request_id: int
+    request_id: int,
+    auto_confirm_request: bool = True  # ← NEW PARAMETER
 ) -> Tuple[bool, str]:
     """
     Confirm slot booking (HELD -> BOOKED).
     
     Args:
         session: Database session
-        slot_id: ID of slot to book
-        request_id: ID of request booking this slot
-    
-    Returns:
-        (success: bool, message: str)
+        slot_id: Slot to book
+        request_id: Associated request
+        auto_confirm_request: If True, also set Request.status = CONFIRMED.
+                              If False, leave Request.status as PENDING (for therapist review).
     """
-    # Fetch slot and request with locks
     slot_result = await session.execute(
         select(Slot).where(Slot.id == slot_id).with_for_update()
     )
@@ -255,11 +254,14 @@ async def confirm_slot_booking(
     if not slot:
         return False, "Slot not found"
     
+    # Allow booking if it's HELD (or check your actual status logic)
     if slot.status != SlotStatus.HELD:
-        return False, "Slot must be held before booking"
+        return False, f"Slot must be HELD before booking, current: {slot.status}"
     
-    # Update slot
+    # Update slot to BOOKED (protects from 15-min cleanup job)
     slot.status = SlotStatus.BOOKED
+    slot.booked_request_id = request_id
+    slot.locked_until = None  # No longer needs timeout
     slot.updated_at = datetime.utcnow()
     
     # Update request
@@ -271,11 +273,39 @@ async def confirm_slot_booking(
     if request:
         request.slot_id = slot_id
         request.scheduled_datetime = slot.start_time
-        request.status = RequestStatus.CONFIRMED
+        
+        # ✅ KEY CHANGE: Only confirm if auto_confirm_request=True
+        if auto_confirm_request:
+            request.status = RequestStatus.CONFIRMED
+            request.final_time = slot.start_time.isoformat()
+        # Otherwise: leave as PENDING for therapist review
     
     await session.commit()
     return True, "Slot booked successfully"
 
+async def release_booked_slot(
+    session: AsyncSession,
+    slot_id: int
+) -> Tuple[bool, str]:
+    """
+    Release a BOOKED slot back to AVAILABLE.
+    Called when therapist rejects a pending request.
+    """
+    slot_result = await session.execute(
+        select(Slot).where(Slot.id == slot_id).with_for_update()
+    )
+    slot = slot_result.scalar_one_or_none()
+    
+    if not slot:
+        return False, "Slot not found"
+    
+    slot.status = SlotStatus.AVAILABLE
+    slot.booked_request_id = None
+    slot.locked_until = None
+    slot.updated_at = datetime.utcnow()
+    
+    await session.commit()
+    return True, "Slot released"
 
 async def release_expired_holds(session: AsyncSession) -> int:
     """

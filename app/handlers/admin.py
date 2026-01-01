@@ -6,6 +6,8 @@ from app.translations import get_text
 from sqlalchemy import select
 from datetime import datetime, timedelta
 from app.models import Slot, SlotStatus
+from app.utils_slots import confirm_slot_booking, release_booked_slot
+from app.utils_slots import format_slot_time, parse_utc_offset
 from app.utils_slots import (
     parse_utc_offset, user_tz_to_utc, validate_slot_time,
     check_slot_overlap, format_slot_time
@@ -35,6 +37,176 @@ LANGUAGES = {
 def is_admin(user_id):
     return user_id in ADMIN_IDS
 
+async def slot_approve_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Therapist approves a slot-based booking request.
+    Transitions Request from PENDING → CONFIRMED.
+    (Slot is already BOOKED, stays BOOKED)
+    """
+    query = update.callback_query
+    await query.answer()
+    
+    # Parse: slot_approve_{request_id}
+    parts = query.data.split('_')
+    if len(parts) < 3:
+        await query.edit_message_text("❌ Invalid callback data.")
+        return
+    
+    req_id = int(parts[2])
+    
+    async with AsyncSessionLocal() as session:
+        # Get request
+        result = await session.execute(
+            select(Request).where(Request.id == req_id)
+        )
+        req = result.scalar_one_or_none()
+        
+        if not req:
+            await query.edit_message_text("❌ Заявка не найдена.")
+            return
+        
+        if req.status != RequestStatus.PENDING:
+            await query.edit_message_text(
+                f"❌ Заявка уже обработана: {req.status.value}"
+            )
+            return
+        
+        if not req.slot_id:
+            await query.edit_message_text("❌ К заявке не привязан слот.")
+            return
+        
+        # Get slot for time info
+        slot_result = await session.execute(
+            select(Slot).where(Slot.id == req.slot_id)
+        )
+        slot = slot_result.scalar_one_or_none()
+        
+        if not slot:
+            await query.edit_message_text("❌ Слот не найден.")
+            return
+        
+        # ✅ Confirm the request (slot already BOOKED, just update request)
+        req.status = RequestStatus.CONFIRMED
+        req.final_time = slot.start_time.isoformat()
+        await session.commit()
+        
+        slot_time_utc = slot.start_time.strftime("%Y-%m-%d %H:%M UTC")
+        
+        # Update admin message
+        await query.edit_message_text(
+            f"✅ <b>ПОДТВЕРЖДЕНО</b>\n\n"
+            f"Заявка {req.request_uuid[:8]}\n"
+            f"Время: {slot_time_utc}\n\n"
+            f"Клиент уведомлен.",
+            parse_mode="HTML"
+        )
+        
+        # Notify client
+        if req.user_id and req.user_id != 0:  # Skip web bookings (user_id=0)
+            user_lang = await get_user_language(req.user_id)
+            
+            # Format time in client's timezone
+            tz_offset = parse_utc_offset(req.timezone) or 0
+            client_time = format_slot_time(slot, tz_offset)
+            
+            confirm_msg = {
+                'ru': (
+                    f"✅ <b>Запись подтверждена!</b>\n\n"
+                    f"📅 {client_time}\n\n"
+                    f"Я свяжусь с вами для уточнения деталей."
+                ),
+                'am': (
+                    f"✅ <b>Delays delays!</b>\n\n"
+                    f"📅 {client_time}\n\n"
+                    f"Delays delays delays."
+                )
+            }.get(user_lang, f"✅ Booking confirmed!\n\n📅 {client_time}")
+            
+            try:
+                await context.bot.send_message(
+                    chat_id=req.user_id,
+                    text=confirm_msg,
+                    parse_mode="HTML"
+                )
+            except Exception as e:
+                print(f"Failed to notify client {req.user_id}: {e}")
+
+
+async def slot_reject_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """
+    Therapist rejects a slot-based booking request.
+    Releases the slot back to AVAILABLE.
+    """
+    query = update.callback_query
+    await query.answer()
+    
+    # Parse: slot_reject_{request_id}
+    parts = query.data.split('_')
+    if len(parts) < 3:
+        await query.edit_message_text("❌ Invalid callback data.")
+        return
+    
+    req_id = int(parts[2])
+    
+    async with AsyncSessionLocal() as session:
+        # Get request
+        result = await session.execute(
+            select(Request).where(Request.id == req_id)
+        )
+        req = result.scalar_one_or_none()
+        
+        if not req:
+            await query.edit_message_text("❌ Заявка не найдена.")
+            return
+        
+        if req.status != RequestStatus.PENDING:
+            await query.edit_message_text(
+                f"❌ Заявка уже обработана: {req.status.value}"
+            )
+            return
+        
+        # Release the slot if attached
+        if req.slot_id:
+            success, msg = await release_booked_slot(session, req.slot_id)
+            if not success:
+                print(f"Warning: Failed to release slot {req.slot_id}: {msg}")
+        
+        # Update request status
+        req.status = RequestStatus.REJECTED
+        await session.commit()
+        
+        # Update admin message
+        await query.edit_message_text(
+            f"❌ <b>ОТКЛОНЕНО</b>\n\n"
+            f"Заявка {req.request_uuid[:8]} отклонена.\n"
+            f"Слот освобождён.\n"
+            f"Клиент уведомлен.",
+            parse_mode="HTML"
+        )
+        
+        # Notify client
+        if req.user_id and req.user_id != 0:
+            user_lang = await get_user_language(req.user_id)
+            
+            reject_msg = {
+                'ru': (
+                    "К сожалению, выбранное время недоступно.\n\n"
+                    "Пожалуйста, выберите другое время или свяжитесь со мной напрямую."
+                ),
+                'am': (
+                    "Delays delays delays delays.\n\n"
+                    "Delays delays delays delays delays."
+                )
+            }.get(user_lang, "Unfortunately, the selected time is not available. Please choose another time.")
+            
+            try:
+                await context.bot.send_message(
+                    chat_id=req.user_id,
+                    text=reject_msg
+                )
+            except Exception as e:
+                print(f"Failed to notify client {req.user_id}: {e}")
+                
 # 🔧 HELPER: Get user language from database
 async def get_user_language(user_id):
     """Fetch user's language preference from database"""

@@ -127,9 +127,10 @@ async def timezone_step(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 "Примеры: UTC+4, UTC+3, UTC-5"
             ),
             'am': (
-                "🌍 <b>Ձdelays delays գdelays</b>\n\n"
-                "delays delays UTC delays delays.\n"
-                "delays: UTC+X delays UTC-X"
+                "🌍 <b>Ձեր ժամային գոտին</b>\n\n"
+                "Նշեք Ձեր UTC ժամային գոտին:\n"
+                "Ձևաչափը՝ UTC+X կամ UTC-X\n\n"
+                "Օրինակներ՝ UTC+4, UTC+3, UTC-5"
             )
         }.get(lang, "Enter your timezone (UTC+X or UTC-X):")
         
@@ -155,7 +156,7 @@ async def timezone_step(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # Add cancel button
     cancel_text = {
         'ru': "❌ Отмена",
-        'am': "❌ delays"
+        'am': "❌ Չեղարկել"
     }.get(lang, "❌ Cancel")
     buttons.append([InlineKeyboardButton(cancel_text, callback_data="tz_cancel")])
     
@@ -165,8 +166,8 @@ async def timezone_step(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "Это нужно для корректного отображения времени консультаций."
         ),
         'am': (
-            "🌍 <b>delays delays delays delays:</b>\n\n"
-            "delays delays delays delays delays delays."
+            "🌍 <b>Ընտրեք Ձեր ժամային գոտին:</b>\n\n"
+            "Սա անհրաժեշտ է խորհրդատվության ժամանակների ճիշտ ցուցադրման համար:"
         )
     }.get(lang, "Select your timezone:")
     
@@ -230,9 +231,9 @@ async def timezone_button_selected(update: Update, context: ContextTypes.DEFAULT
                     "Укажите желаемое время и дату:"
                 ),
                 'am': (
-                    f"✅ delays delays: {timezone.offset_str} ({timezone.display_name})\n\n"
-                    "⚠️ delays, delays delays delays delays delays.\n\n"
-                    "delays delays delays delays delays:"
+                     f"✅ Ժամային գոտի: {timezone.offset_str} ({timezone.display_name})\n\n"
+                     "⚠️ Ցավոք, ներկայումս հասանելի սլոտներ չկան:\n\n"
+                     "Նշեք Ձեր նախընտրած ժամանակը և ամսաթիվը:"
                 )
             }.get(lang, f"Timezone: {timezone.offset_str}\n\nNo slots available. Enter desired time:")
             
@@ -249,7 +250,7 @@ async def timezone_button_selected(update: Update, context: ContextTypes.DEFAULT
         # Add "other time" option
         other_time_text = {
             'ru': "⏰ Другое время",
-            'am': "⏰ delays delays"
+            'am': "⏰ Այլ ժամանակ"
         }.get(lang, "⏰ Other time")
         buttons.append([InlineKeyboardButton(other_time_text, callback_data="slot_other")])
         
@@ -261,10 +262,10 @@ async def timezone_button_selected(update: Update, context: ContextTypes.DEFAULT
                 f"Выберите удобное время:"
             ),
             'am': (
-                f"✅ delays delays: <b>{timezone.offset_str}</b>\n"
-                f"📍 {timezone.display_name}\n\n"
-                f"📅 <b>delays delays:</b>\n"
-                f"delays delays delays:"
+               f"✅ Ժամային գոտի: <b>{timezone.offset_str}</b>\n"
+               f"📍 {timezone.display_name}\n\n"
+               f"📅 <b>Հասանելի սլոտներ:</b>\n"
+               f"Ընտրեք հարմար ժամանակ:"
             )
         }.get(lang, f"Timezone: {timezone.offset_str}\n\nAvailable slots:")
         
@@ -314,8 +315,8 @@ async def slot_select_step(update: Update, context: ContextTypes.DEFAULT_TYPE):
                     "Укажите желаемое время и дату:"
                 ),
                 'am': (
-                    "⚠️ delays, delays delays delays delays delays.\n\n"
-                    "delays delays delays delays delays:"
+                    "⚠️ Ցավոք, ներկայումս հասանելի սլոտներ չկան:\n\n"
+                    "Նշեք Ձեր նախընտրած ժամանակը և ամսաթիվը:"
                 )
             }.get(lang, "No slots available. Please enter your desired time:")
             
@@ -335,13 +336,13 @@ async def slot_select_step(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Add "other time" option
         other_time_text = {
             'ru': "⏰ Другое время (свободный текст)",
-            'am': "⏰ delays delays (delays delays)"
+            'am': "⏰ Այլ ժամանակ (ազատ տեքստ)"
         }.get(lang, "Other time (free text)")
         buttons.append([InlineKeyboardButton(other_time_text, callback_data="slot_other")])
         
         select_slot_msg = {
             'ru': f"✅ Часовой пояс: {tz_str}\n\n📅 <b>Доступные слоты:</b>\n\nВыберите удобное время:",
-            'am': f"✅ delays delays: {tz_str}\n\n📅 <b>delays delays:</b>\n\ndelays delays delays:"
+            'am': f"✅ Ժամային գոտի: {tz_str}\n\n📅 <b>Հասանելի սլոտներ:</b>\n\nԸնտրեք հարմար ժամանակ:"
         }.get(lang, f"Timezone: {tz_str}\n\nAvailable slots:")
         
         await update.message.reply_text(
@@ -364,7 +365,7 @@ async def slot_selected_callback(update: Update, context: ContextTypes.DEFAULT_T
         # User wants to enter time manually
         other_time_prompt = {
             'ru': "⏰ Укажите желаемое время и дату свободным текстом:",
-            'am': "⏰ delays delays delays delays delays:"
+            'am': "⏰ Նշեք նախընտրած ժամանակը և ամսաթիվը ազատ տեքստով:"
         }.get(lang, "Enter your desired time:")
         
         await query.edit_message_text(other_time_prompt)
@@ -406,8 +407,9 @@ async def slot_selected_callback(update: Update, context: ContextTypes.DEFAULT_T
             ),
             'am': (
                 f"✅ <b>delays delays!</b>\n\n"
+                f"✅ <b>Սլոտը ռեզերվացվել է:</b>\n\n"
                 f"📅 {slot_time_str}\n\n"
-                f"⏰ delays delays 15 delays delays delays delays delays.\n\n"
+                f"⏰ Դուք ունեք 15 րոպե գրանցումն ավարտելու համար:\n\n"
                 f"{get_text(lang, 'ask_problem')}"
             )
         }.get(lang, f"Slot held: {slot_time_str}\n\n{get_text(lang, 'ask_problem')}")
@@ -470,44 +472,53 @@ async def contacts_step(update: Update, context: ContextTypes.DEFAULT_TYPE):
         # Handle slot-based booking
         selected_slot_id = context.user_data.get('selected_slot_id')
         if selected_slot_id:
-            # Confirm slot booking (HELD → BOOKED)
             session.add(req)
             await session.commit()
             await session.refresh(req)
             
-            success, message = await confirm_slot_booking(session, selected_slot_id, req.id)
+            # ✅ CHANGED: Don't auto-confirm the request
+            success, message = await confirm_slot_booking(
+                session, 
+                selected_slot_id, 
+                req.id,
+                auto_confirm_request=False  # ← Therapist must approve
+            )
             
             if not success:
                 error_msg = {
                     'ru': f"❌ Не удалось забронировать слот: {message}",
-                    'am': f"❌ delays delays delays delays: {message}"
+                    'am': f"❌ Հնարավոր չեղավ ամրագրել սլոտը: {message}"
                 }.get(lang, f"Booking failed: {message}")
                 
                 await update.message.reply_text(error_msg)
                 return ConversationHandler.END
             
-            # Get confirmed slot details
+            # Get slot details for message
             result = await session.execute(select(Slot).where(Slot.id == selected_slot_id))
             slot = result.scalar_one()
             tz_offset = context.user_data.get('tz_offset', 0)
             slot_time_str = format_slot_time(slot, tz_offset)
             
-            confirm_msg = {
+            # ✅ CHANGED: Message now says "request received" not "confirmed"
+            pending_msg = {
                 'ru': (
-                    f"✅ <b>Запись подтверждена!</b>\n\n"
-                    f"📅 {slot_time_str}\n"
-                    f"🆔 Номер заявки: {req.request_uuid[:8]}\n\n"
-                    f"Я свяжусь с вами для подтверждения деталей."
+                    f"✅ <b>Заявка принята!</b>\n\n"
+                    f"📅 Выбранное время: {slot_time_str}\n"
+                    f"🆔 Номер: {req.request_uuid[:8]}\n\n"
+                    f"⏳ Ожидайте подтверждения от психотерапевта."
                 ),
                 'am': (
-                    f"✅ <b>delays delays!</b>\n\n"
-                    f"📅 {slot_time_str}\n"
-                    f"🆔 delays delays: {req.request_uuid[:8]}\n\n"
-                    f"delays delays delays delays delays delays delays."
+                    f"✅ <b>Հայտն ընդունված է:</b>\n\n"
+                    f"📅 Ընտրված ժամանակը: {slot_time_str}\n"
+                    f"🆔 Համար: {req.request_uuid[:8]}\n\n"
+                    f"⏳ Սպասեք հաստատմանը հոգեթերապևտից:"
                 )
-            }.get(lang, f"Booking confirmed!\n{slot_time_str}\nRequest: {req.request_uuid[:8]}")
+            }.get(lang, f"Request received!\n{slot_time_str}\nWaiting for confirmation.")
             
-            await update.message.reply_text(confirm_msg, parse_mode="HTML")
+            await update.message.reply_text(pending_msg, parse_mode="HTML")
+            
+            # ✅ NEW: Notify therapist with approve/reject buttons
+            await notify_admin_slot_request(context, req, slot, tz_offset)
             
         else:
             # Text-based booking (fallback)
@@ -549,6 +560,53 @@ async def contacts_step(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
     return ConversationHandler.END
 
+async def notify_admin_slot_request(
+    context: ContextTypes.DEFAULT_TYPE,
+    request: Request,
+    slot: Slot,
+    client_tz_offset: int = 0
+):
+    """
+    Notify therapist of new slot-based booking request.
+    Includes inline buttons for Approve/Reject.
+    """
+    slot_time_utc = slot.start_time.strftime("%Y-%m-%d %H:%M UTC")
+    slot_time_local = format_slot_time(slot, client_tz_offset)
+    
+    admin_text = (
+        f"📋 <b>Новая заявка на запись</b>\n\n"
+        f"🆔 ID: <code>{request.request_uuid[:8]}</code>\n"
+        f"📅 Время: {slot_time_utc}\n"
+        f"   (клиент видит: {slot_time_local})\n"
+        f"👤 Тип: {request.type.value}\n"
+        f"🌍 Часовой пояс: {request.timezone or 'N/A'}\n"
+        f"📝 Запрос: {(request.problem or 'N/A')[:150]}\n\n"
+        f"⏳ Слот зарезервирован. Ожидает вашего решения."
+    )
+    
+    keyboard = InlineKeyboardMarkup([
+        [
+            InlineKeyboardButton("✅ Подтвердить", callback_data=f"slot_approve_{request.id}"),
+            InlineKeyboardButton("❌ Отклонить", callback_data=f"slot_reject_{request.id}")
+        ],
+        [
+            InlineKeyboardButton("📋 Подробнее", callback_data=f"adm_view_{request.id}")
+        ]
+    ])
+    
+    admin_ids = os.getenv("ADMIN_IDS", "").split(",")
+    for admin_id in admin_ids:
+        if not admin_id.strip():
+            continue
+        try:
+            await context.bot.send_message(
+                chat_id=int(admin_id.strip()),
+                text=admin_text,
+                reply_markup=keyboard,
+                parse_mode="HTML"
+            )
+        except Exception as e:
+            print(f"Failed to notify admin {admin_id}: {e}")
 
 async def waitlist_finalize(update: Update, context: ContextTypes.DEFAULT_TYPE):
     lang = context.user_data.get('lang', 'ru')
